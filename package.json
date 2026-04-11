@@ -1,35 +1,32 @@
 {
-  "name": "salesforce",
+  "name": "sf-middleware",
   "version": "1.0.0",
-  "description": "This project was bootstrapped with Fastify-CLI.",
-  "main": "app.ts",
-  "directories": {
-    "test": "test"
-  },
+  "description": "Bubble → Salesforce middleware bridge with queuing, retries, and observability.",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "npm run build:ts && tsc -p test/tsconfig.json && c8 node --test -r ts-node/register \"test/**/*.ts\"",
-    "start": "npm run build:ts && fastify start -l info dist/app.js",
-    "build:ts": "tsc",
-    "watch:ts": "tsc -w",
-    "dev": "npm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
-    "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && concurrently -k -n tsc,app \"tsc -w\" \"node --watch dist/index.js\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@bull-board/api": "^6.21.0",
+    "@bull-board/fastify": "^6.21.0",
+    "@fastify/basic-auth": "^6.2.0",
+    "bullmq": "^5.73.4",
+    "dotenv": "^17.4.1",
     "fastify": "^5.0.0",
-    "fastify-plugin": "^5.0.0",
-    "@fastify/autoload": "^6.0.0",
-    "@fastify/sensible": "^6.0.0",
-    "fastify-cli": "^7.4.1"
+    "ioredis": "^5.10.1",
+    "pino": "^10.3.1",
+    "pino-axiom": "^1.0.432"
   },
   "devDependencies": {
     "@types/node": "^24.0.8",
-    "c8": "^10.1.2",
-    "ts-node": "^10.4.0",
     "concurrently": "^9.0.0",
     "fastify-tsconfig": "^3.0.0",
+    "ts-node": "^10.4.0",
     "typescript": "~5.9.2"
   }
 }
