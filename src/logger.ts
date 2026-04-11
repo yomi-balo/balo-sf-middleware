@@ -6,11 +6,11 @@ function getTransportTargets(): Array<{ target: string; options: Record<string, 
     { target: 'pino/file', options: { destination: 1 } },
   ];
 
-  if (process.env.AXIOM_TOKEN) {
+  if (process.env.AXIOM_TOKEN && process.env.AXIOM_ORG_ID) {
     targets.push({
       target: 'pino-axiom',
       options: {
-        orgId: process.env.AXIOM_ORG_ID || '',
+        orgId: process.env.AXIOM_ORG_ID,
         dataset: process.env.AXIOM_DATASET || 'sf-middleware',
         token: process.env.AXIOM_TOKEN,
       },
