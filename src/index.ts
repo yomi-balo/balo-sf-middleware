@@ -28,7 +28,7 @@ async function main(): Promise<void> {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
-  const app = Fastify({ logger: buildLoggerConfig() });
+  const app = Fastify({ logger: buildLoggerConfig(), ignoreTrailingSlash: true });
 
   // --- Health check (unauthenticated) ---
   await app.register(healthRoute);
