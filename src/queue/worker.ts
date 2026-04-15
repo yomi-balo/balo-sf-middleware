@@ -67,7 +67,13 @@ function buildActivityMessage(job: Job<SfForwardJob>): { header: string; body: s
     };
   }
 
-  return null; // Silent routes
+  // Generic message for all other routes (lead, account, contact, project-expert)
+  // TODO: Revert to `return null` once dev/testing is done — these are infrastructure
+  // plumbing, not sales-relevant events.
+  return {
+    header: '🔵 SF sync completed',
+    body: `*Route:* ${route}\n*Job ID:* ${job.id}`,
+  };
 }
 
 // --- Workers ---
