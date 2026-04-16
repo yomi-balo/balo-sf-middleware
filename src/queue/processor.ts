@@ -6,6 +6,31 @@ import { getToken, refreshToken } from '../sf/token.js';
 import { postError } from '../notifications/slack.js';
 import { logger } from '../logger.js';
 
+// Strip invisible Unicode characters that Bubble sometimes embeds in text fields.
+// These break Salesforce Apex parsers (especially date fields).
+const INVISIBLE_CHARS = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u2028\u2029]/g;
+
+function sanitizeValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value.replace(INVISIBLE_CHARS, '');
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeValue);
+  }
+  if (value !== null && typeof value === 'object') {
+    return sanitizePayload(value as Record<string, unknown>);
+  }
+  return value;
+}
+
+function sanitizePayload(obj: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    cleaned[key] = sanitizeValue(val);
+  }
+  return cleaned;
+}
+
 interface SfCallResult {
   status: number;
   body: unknown;
@@ -41,7 +66,8 @@ async function callSalesforce(
 }
 
 export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
-  const { route, sfMethod, sfPath, body, enqueuedAt } = job.data;
+  const { route, sfMethod, sfPath, body: rawBody, enqueuedAt } = job.data;
+  const body = sanitizePayload(rawBody);
 
   // 1. Get token
   let token = await getToken(redis);
