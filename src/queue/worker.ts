@@ -27,7 +27,7 @@ function buildActivityMessage(job: Job<SfForwardJob>): { header: string; body: s
     };
   }
 
-  if (route === 'POST /crm/booking') {
+  if (route === 'POST /crm/booking/:id') {
     return {
       header: '🟢 Booking converted',
       body:
