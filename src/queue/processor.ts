@@ -167,6 +167,7 @@ export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
       header: '⚠️ Salesforce rejected the payload (4xx)',
       body:
         `*Route:*     ${route}\n` +
+        `*SF Path:*   ${process.env.SF_BASE_URL}${sfPath}\n` +
         `*SF Status:* ${result.status}\n` +
         `*SF Error:*  ${sfErrorDetail}\n` +
         `*Job ID:*    ${job.id}\n\n` +

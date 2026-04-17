@@ -103,7 +103,7 @@ export function startWorkers(): { forwardWorker: Worker<SfForwardJob>; digestWor
       if (!job) return;
       const maxAttempts = job.opts?.attempts ?? 3;
       if (job.attemptsMade >= maxAttempts) {
-        const { route, body, enqueuedAt } = job.data;
+        const { route, sfPath, body, enqueuedAt } = job.data;
 
         // Extract SF status from error message if available
         const sfStatusMatch = err.message.match(/Salesforce returned (\d+)/);
@@ -119,6 +119,7 @@ export function startWorkers(): { forwardWorker: Worker<SfForwardJob>; digestWor
           header: '🔴 SF sync job failed permanently',
           body:
             `*Route:*     ${route}\n` +
+            `*SF Path:*   ${process.env.SF_BASE_URL}${sfPath}\n` +
             `*Job ID:*    ${job.id}\n` +
             `*Attempts:*  ${job.attemptsMade}\n` +
             `*Error:*     ${err.message}\n` +
