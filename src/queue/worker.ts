@@ -7,12 +7,24 @@ import { processDigest } from './digest.js';
 import { postActivity, postError } from '../notifications/slack.js';
 import { logger } from '../logger.js';
 
-// --- Activity message builders for qualifying routes ---
+// --- Slack activity level ---
+// SLACK_ACTIVITY_LEVEL controls how much detail success messages include:
+//   "full"    — route, SF path, job ID, and full payload (for dev/debugging)
+//   "compact" — human-readable summary per route (for production)
+type ActivityLevel = 'full' | 'compact';
+
+function getActivityLevel(): ActivityLevel {
+  const level = process.env.SLACK_ACTIVITY_LEVEL?.toLowerCase();
+  if (level === 'full') return 'full';
+  return 'compact';
+}
+
+// --- Compact activity message builders ---
 // NOTE: Field names (firstName, lastName, companyName, opportunityName, etc.)
 // must match the JSON keys Bubble sends. If Bubble changes its payload shape,
 // these messages will silently degrade to showing '—'.
 
-function buildActivityMessage(job: Job<SfForwardJob>): { header: string; body: string } | null {
+function buildCompactMessage(job: Job<SfForwardJob>): { header: string; body: string } | null {
   const { route, body } = job.data;
   const b = body as Record<string, unknown>;
 
@@ -67,13 +79,27 @@ function buildActivityMessage(job: Job<SfForwardJob>): { header: string; body: s
     };
   }
 
-  // Generic message for all other routes (lead, account, contact, project-expert)
-  // TODO: Revert to `return null` once dev/testing is done — these are infrastructure
-  // plumbing, not sales-relevant events.
+  // Silent routes in compact mode
+  return null;
+}
+
+function buildFullMessage(job: Job<SfForwardJob>): { header: string; body: string } {
+  const { route, sfPath, body } = job.data;
   return {
-    header: '🔵 SF sync completed',
-    body: `*Route:* ${route}\n*Job ID:* ${job.id}`,
+    header: '🟢 SF sync succeeded',
+    body:
+      `*Route:*   ${route}\n` +
+      `*SF Path:* ${process.env.SF_BASE_URL}${sfPath}\n` +
+      `*Job ID:*  ${job.id}\n\n` +
+      `Payload:\n\`\`\`${JSON.stringify(body, null, 2)}\`\`\``,
   };
+}
+
+function buildActivityMessage(job: Job<SfForwardJob>): { header: string; body: string } | null {
+  if (getActivityLevel() === 'full') {
+    return buildFullMessage(job);
+  }
+  return buildCompactMessage(job);
 }
 
 // --- Workers ---
@@ -84,7 +110,7 @@ export function startWorkers(): { forwardWorker: Worker<SfForwardJob>; digestWor
     concurrency: 5,
   });
 
-  // On job completed — post activity to Slack for qualifying routes
+  // On job completed — post activity to Slack
   forwardWorker.on('completed', async (job: Job<SfForwardJob> | undefined) => {
     try {
       if (!job) return;
