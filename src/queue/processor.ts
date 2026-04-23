@@ -184,6 +184,10 @@ export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
   }
 
   // 7. Handle 5xx / other — retryable error
+  const sfBodyStr = typeof result.body === 'string'
+    ? result.body
+    : JSON.stringify(result.body);
+
   logger.error({
     event: 'sf_forward_failed',
     route,
@@ -198,5 +202,5 @@ export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
     payload: body,
   });
 
-  throw new Error(`Salesforce returned ${result.status}`);
+  throw new Error(`Salesforce returned ${result.status}: ${sfBodyStr}`);
 }
