@@ -65,9 +65,34 @@ async function callSalesforce(
   return { status: res.status, body: resBody, durationMs: Date.now() - start };
 }
 
+// Test/internal emails that should never reach Salesforce
+const BLOCKED_EMAIL_PATTERNS = [
+  '@revido.io',
+  '@ylinkz.',
+  'yomi@getbalo.com',
+];
+
+function isBlockedEmail(body: Record<string, unknown>): boolean {
+  const email = typeof body.email === 'string' ? body.email.toLowerCase() : '';
+  if (!email) return false;
+  return BLOCKED_EMAIL_PATTERNS.some((p) => email.includes(p));
+}
+
 export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
   const { route, sfMethod, sfPath, body: rawBody, enqueuedAt } = job.data;
   const body = sanitizePayload(rawBody);
+
+  // Drop test/internal accounts before they reach Salesforce
+  if (isBlockedEmail(body)) {
+    logger.info({
+      event: 'sf_forward_skipped',
+      reason: 'blocked_email',
+      email: body.email,
+      route,
+      jobId: job.id,
+    });
+    return;
+  }
 
   // 1. Get token
   let token = await getToken(redis);
