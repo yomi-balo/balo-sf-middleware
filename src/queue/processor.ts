@@ -68,7 +68,7 @@ async function callSalesforce(
 // Test/internal emails that should never reach Salesforce
 const BLOCKED_EMAIL_PATTERNS = [
   '@revido.io',
-  '@ylinkz.',
+  'ylinkz',
   'yomi@getbalo.com',
 ];
 
