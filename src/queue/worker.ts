@@ -107,7 +107,7 @@ function buildActivityMessage(job: Job<SfForwardJob>): { header: string; body: s
 export function startWorkers(): { forwardWorker: Worker<SfForwardJob>; digestWorker: Worker } {
   const forwardWorker = new Worker<SfForwardJob>('sf-forward', processSfForward, {
     connection: redis,
-    concurrency: 5,
+    concurrency: 1,
   });
 
   // On job completed — post activity to Slack
