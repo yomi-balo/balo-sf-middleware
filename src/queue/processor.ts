@@ -14,6 +14,11 @@ const INVISIBLE_CHARS = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u2028
 // data URIs which balloon payload size and break SF field length limits.
 const BASE64_IMG = /data:image\/[a-zA-Z+]+;base64,[A-Za-z0-9+/=\s]+/g;
 
+// SF field length limits (applied per-key after string cleaning).
+const SF_FIELD_LIMITS: Record<string, number> = {
+  Name: 120,
+};
+
 function sanitizeValue(value: unknown): unknown {
   if (typeof value === 'string') {
     return value
@@ -32,7 +37,12 @@ function sanitizeValue(value: unknown): unknown {
 function sanitizePayload(obj: Record<string, unknown>): Record<string, unknown> {
   const cleaned: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(obj)) {
-    cleaned[key] = sanitizeValue(val);
+    let sanitized = sanitizeValue(val);
+    // Apply per-field length limits
+    if (typeof sanitized === 'string' && SF_FIELD_LIMITS[key]) {
+      sanitized = sanitized.substring(0, SF_FIELD_LIMITS[key]);
+    }
+    cleaned[key] = sanitized;
   }
   return cleaned;
 }
