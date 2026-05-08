@@ -14,18 +14,11 @@ const INVISIBLE_CHARS = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u2028
 // data URIs which balloon payload size and break SF field length limits.
 const BASE64_IMG = /data:image\/[a-zA-Z+]+;base64,[A-Za-z0-9+/=\s]+/g;
 
-// SF Long Text Area max is 32,000 chars. Truncate anything longer.
-const MAX_STRING_LENGTH = 32_000;
-
 function sanitizeValue(value: unknown): unknown {
   if (typeof value === 'string') {
-    let cleaned = value
+    return value
       .replace(INVISIBLE_CHARS, '')
       .replace(BASE64_IMG, '<image>');
-    if (cleaned.length > MAX_STRING_LENGTH) {
-      cleaned = cleaned.substring(0, MAX_STRING_LENGTH - 20) + '\n... (truncated)';
-    }
-    return cleaned;
   }
   if (Array.isArray(value)) {
     return value.map(sanitizeValue);
