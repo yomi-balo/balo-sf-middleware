@@ -10,9 +10,15 @@ import { logger } from '../logger.js';
 // These break Salesforce Apex parsers (especially date fields).
 const INVISIBLE_CHARS = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u2028\u2029]/g;
 
+// Strip base64-encoded images from rich text fields. Bubble embeds inline images as
+// data URIs which balloon payload size and break SF field length limits.
+const BASE64_IMG = /data:image\/[a-zA-Z+]+;base64,[A-Za-z0-9+/=\s]+/g;
+
 function sanitizeValue(value: unknown): unknown {
   if (typeof value === 'string') {
-    return value.replace(INVISIBLE_CHARS, '');
+    return value
+      .replace(INVISIBLE_CHARS, '')
+      .replace(BASE64_IMG, '<image>');
   }
   if (Array.isArray(value)) {
     return value.map(sanitizeValue);
