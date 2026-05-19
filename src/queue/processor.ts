@@ -19,6 +19,34 @@ const SF_FIELD_LIMITS: Record<string, number> = {
   Name: 120,
 };
 
+// Route labels — used to scope route-specific payload transforms below.
+const ROUTE_CASE_OPPORTUNITY = 'PATCH /crm/opportunity/case/:id';
+
+// Title-case the first letter (Bubble sends slugs like "ongoing", SF picklist expects "Ongoing").
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+// Case Opportunity payload normalization: applied to bring Bubble real-time payloads
+// in line with what the Python transformer produces.
+function transformCaseOpportunityPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...body };
+
+  // Field key rename: Type_Of_Support__c → Type_of_Support__c (lowercase "of")
+  if ('Type_Of_Support__c' in out && !('Type_of_Support__c' in out)) {
+    out.Type_of_Support__c = out.Type_Of_Support__c;
+    delete out.Type_Of_Support__c;
+  }
+
+  // StageName: Bubble may send slug ("ongoing"); SF picklist needs Title-case ("Ongoing")
+  if (typeof out.StageName === 'string') {
+    out.StageName = capitalize(out.StageName);
+  }
+
+  return out;
+}
+
 function sanitizeValue(value: unknown): unknown {
   if (typeof value === 'string') {
     return value
@@ -96,7 +124,12 @@ function isBlockedEmail(body: Record<string, unknown>): boolean {
 
 export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
   const { route, sfMethod, sfPath, body: rawBody, enqueuedAt } = job.data;
-  const body = sanitizePayload(rawBody);
+  let body = sanitizePayload(rawBody);
+
+  // Route-specific payload normalization (mirrors Python transformer output)
+  if (route === ROUTE_CASE_OPPORTUNITY) {
+    body = transformCaseOpportunityPayload(body);
+  }
 
   // Drop test/internal accounts before they reach Salesforce
   if (isBlockedEmail(body)) {
