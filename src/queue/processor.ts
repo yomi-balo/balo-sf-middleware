@@ -21,6 +21,7 @@ const SF_FIELD_LIMITS: Record<string, number> = {
 
 // Route labels — used to scope route-specific payload transforms below.
 const ROUTE_CASE_OPPORTUNITY = 'PATCH /crm/opportunity/case/:id';
+const ROUTE_CONSULTATION = 'PATCH /crm/consultation/:id';
 
 // Title-case the first letter (Bubble sends slugs like "ongoing", SF picklist expects "Ongoing").
 function capitalize(s: string): string {
@@ -42,6 +43,19 @@ function transformCaseOpportunityPayload(body: Record<string, unknown>): Record<
   // StageName: Bubble may send slug ("ongoing"); SF picklist needs Title-case ("Ongoing")
   if (typeof out.StageName === 'string') {
     out.StageName = capitalize(out.StageName);
+  }
+
+  return out;
+}
+
+// Consultation payload normalization.
+function transformConsultationPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...body };
+
+  // SF requires true/false (not null) for Participants_Present__c. Coerce null → false
+  // (Bubble only computes "Summary Present" for completed meetings; missed/cancelled = false).
+  if (out.Participants_Present__c === null || out.Participants_Present__c === undefined) {
+    out.Participants_Present__c = false;
   }
 
   return out;
@@ -129,6 +143,8 @@ export async function processSfForward(job: Job<SfForwardJob>): Promise<void> {
   // Route-specific payload normalization (mirrors Python transformer output)
   if (route === ROUTE_CASE_OPPORTUNITY) {
     body = transformCaseOpportunityPayload(body);
+  } else if (route === ROUTE_CONSULTATION) {
+    body = transformConsultationPayload(body);
   }
 
   // Drop test/internal accounts before they reach Salesforce
