@@ -19,7 +19,7 @@ const SF_FIELD_LIMITS: Record<string, number> = {
   Name: 120,
 };
 
-// Route labels — used to scope route-specific payload transforms below.
+// Route labels used to scope route-specific payload transforms below.
 const ROUTE_CASE_OPPORTUNITY = 'PATCH /crm/opportunity/case/:id';
 const ROUTE_CONSULTATION = 'PATCH /crm/consultation/:id';
 
