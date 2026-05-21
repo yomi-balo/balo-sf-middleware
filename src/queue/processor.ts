@@ -14,6 +14,12 @@ const INVISIBLE_CHARS = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u2028
 // data URIs which balloon payload size and break SF field length limits.
 const BASE64_IMG = /data:image\/[a-zA-Z+]+;base64,[A-Za-z0-9+/=\s]+/g;
 
+// Strip Bubble rich text formatting tags. Bubble's rich text editor wraps content in
+// bracket-style markup that SF stores verbatim and renders unreadable:
+//   [h2]...[/h2]  [b]...[/b]  [li indent=0 align=left]  [highlight=rgba(0,0,0,0)]
+// Matches [tag], [/tag], [tag attr=val ...] — anything not starting with a letter is left alone.
+const BUBBLE_RICH_TEXT = /\[\/?[a-zA-Z][a-zA-Z0-9]*(?:[ =][^\]]*)?\]/g;
+
 // SF field length limits (applied per-key after string cleaning).
 const SF_FIELD_LIMITS: Record<string, number> = {
   Name: 120,
@@ -65,7 +71,8 @@ function sanitizeValue(value: unknown): unknown {
   if (typeof value === 'string') {
     return value
       .replace(INVISIBLE_CHARS, '')
-      .replace(BASE64_IMG, '<image>');
+      .replace(BASE64_IMG, '<image>')
+      .replace(BUBBLE_RICH_TEXT, '');
   }
   if (Array.isArray(value)) {
     return value.map(sanitizeValue);
