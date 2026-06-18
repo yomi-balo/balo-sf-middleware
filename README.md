@@ -35,10 +35,8 @@ Requires a running Redis instance (set `REDIS_URL` in `.env`).
 | `MIDDLEWARE_API_SECRET` | Shared bearer token for Bubble → middleware auth | Generate a strong random string; set in Bubble API Connector |
 | `SF_BASE_URL` | Salesforce instance URL | Salesforce Setup → Company Information |
 | `SF_API_VERSION` | SF REST API version (e.g. `v65.0`) | Salesforce release notes |
-| `SF_CLIENT_ID` | Connected App consumer key | Salesforce Setup → App Manager → Connected App |
+| `SF_CLIENT_ID` | Connected App consumer key (Client Credentials flow) | Salesforce Setup → App Manager → Connected App |
 | `SF_CLIENT_SECRET` | Connected App consumer secret | Same as above |
-| `SF_USERNAME` | Integration user username | Salesforce user management |
-| `SF_PASSWORD` | Integration user password (+ security token if required) | Salesforce user management |
 | `REDIS_URL` | Redis connection string | Railway Redis plugin dashboard |
 | `AXIOM_DATASET` | Axiom dataset name | Axiom dashboard |
 | `AXIOM_TOKEN` | Axiom API token | Axiom Settings → API Tokens |

@@ -18,11 +18,9 @@ function fetchAndCacheToken(redis: Redis): Promise<string> {
   tokenFetchPromise = (async () => {
     try {
       const params = new URLSearchParams({
-        grant_type: 'password',
+        grant_type: 'client_credentials',
         client_id: process.env.SF_CLIENT_ID!,
         client_secret: process.env.SF_CLIENT_SECRET!,
-        username: process.env.SF_USERNAME!,
-        password: process.env.SF_PASSWORD!,
       });
 
       const res = await fetch(
